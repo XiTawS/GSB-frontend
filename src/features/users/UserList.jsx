@@ -6,7 +6,7 @@ import EditUserModal from './components/EditUserModal/EditUserModal';
 import ResetPasswordModal from './components/ResetPasswordModal/ResetPasswordModal';
 import DeleteConfirmationModal from './components/DeleteConfirmationModal/DeleteConfirmationModal';
 import { getAllUsers, updateUser, deleteUser, resetUserPassword } from '../../services/userService';
-import '../Dashboard/Dashboard.css';
+import '../../features/dashboard/Dashboard.css';
 import './UserList.css';
 
 export default function UserList({ onLogout }) {

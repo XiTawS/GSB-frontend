@@ -3,9 +3,9 @@ import Sidebar from '../../components/Sidebar/Sidebar';
 import BillModal from '../invoices/components/BillModal/BillModal';
 import AddBillModal from '../invoices/components/AddBillModal/AddBillModal';
 import AddUserModal from '../users/components/AddUser/AddUserModal';
-import './Dashboard.css';
 import { getAllInvoices } from '../../services/invoiceService';
 import { getUserByEmail } from '../../services/userService';
+import './Dashboard.css';
 
 export default function Dashboard({ onLogout }) {
   const [bills, setBills] = useState([]);
