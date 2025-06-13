@@ -281,7 +281,7 @@ export default function Invoices({ onLogout }) {
                     </div>
                 <div className="flex-1">
                   <dt className="text-base text-gray-500">Montant total des factures totales</dt>
-                  <dd className="text-4xl font-semibold text-gray-900">{bills.reduce((total, bill) => total + bill.amount, 0)} €</dd>
+                  <dd className="text-4xl font-semibold text-gray-900">{bills.reduce((total, bill) => total + bill.amount, 0).toFixed(2)} €</dd>
                     </div>
                 <div className="flex-1">
                   <dt className="text-base text-gray-500">Nombre de factures validées</dt>
