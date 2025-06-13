@@ -1,0 +1,90 @@
+.billactions-modal-content {
+  min-width: 300px;
+  max-width: 95vw;
+  padding: 1.5rem 1.5rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  margin: 0 auto;
+}
+@media (max-width: 600px) {
+  .billactions-modal-content {
+    padding: 1rem 0.5rem;
+    min-width: 0;
+    width: 98vw;
+  }
+}
+
+.billactions-popover-content {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 0.25rem;
+  min-width: 140px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  position: relative;
+}
+.billactions-popover-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.billactions-btn {
+  background: none;
+  border: none;
+  color: #222;
+  font-size: 0.97rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s;
+  text-align: left;
+  font-weight: 400;
+}
+.billactions-btn:hover {
+  background: #f3f4f6;
+  color: #111;
+}
+@media (max-width: 600px) {
+  .billactions-popover-content {
+    min-width: 90px;
+    padding: 0.3rem 0.1rem;
+  }
+  .billactions-btn {
+    font-size: 0.93rem;
+    padding: 0.3rem 0.4rem;
+  }
+}
+
+.billactions-popover-content::before {
+  content: '';
+  position: absolute;
+  right: -10px;
+  top: 18px;
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 10px solid #fff;
+  filter: drop-shadow(1px 0 2px rgba(0,0,0,0.04));
+}
+
+.popover-arrow {
+  /* supprimé, plus utilisé */
+}
+
+.billactions-btn-danger {
+  color: #dc2626;
+  font-weight: 600;
+  border: 1.2px solid transparent;
+  transition: background 0.13s, color 0.13s, border 0.13s;
+}
+.billactions-btn-danger:hover {
+  background: #dc2626;
+  color: #fff;
+  border: 1.2px solid #dc2626;
+}

@@ -1,0 +1,23 @@
+.popover-overlay {
+  /* Overlay transparent pour capter le clic extérieur */
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: 1000;
+}
+
+.popover-content {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+  padding: 1rem;
+  min-width: 180px;
+  max-width: 95vw;
+  z-index: 1101;
+  transition: box-shadow 0.15s;
+}
+@media (max-width: 600px) {
+  .popover-content {
+    min-width: 120px;
+    padding: 0.5rem;
+  }
+} 
