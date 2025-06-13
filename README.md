@@ -4,7 +4,7 @@
 Ce projet est l'interface utilisateur frontend de l'application GSB. Il s'agit d'une application web de gestion de notes de frais développée avec React et Vite.
 
 ## 🌐 Site Web 
-Le site est accessible à l'adresse suivante : [https://gsb-frontend-phi.vercel.app](https://gsb-frontend-phi.vercel.app)
+Le site est accessible à l'adresse suivante : [https://gsb-frontend-six.vercel.app](https://gsb-frontend-six.vercel.app)
 
 ## ⚠️ Note Importante
 Lors de la première connexion, le temps de chargement peut être plus long (2-3 minutes) car le backend est hébergé sur Render et nécessite un temps de démarrage. Cette situation est normale et temporaire, une fois le backend démarré, les connexions suivantes seront beaucoup plus rapides.
