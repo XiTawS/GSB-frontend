@@ -5,6 +5,7 @@ import './UserActionsModal.css';
 export default function UserActionsModal({ isOpen, onClose, onEdit, onDelete, onResetPassword, user, position }) {
   const popoverRef = useRef(null);
   const [popoverHeight, setPopoverHeight] = useState(80);
+  const userRole = localStorage.getItem('token') ? JSON.parse(atob(localStorage.getItem('token').split('.')[1])).role : '';
 
   useLayoutEffect(() => {
     if (popoverRef.current) {
@@ -19,9 +20,13 @@ export default function UserActionsModal({ isOpen, onClose, onEdit, onDelete, on
   return (
     <ActionsPopover isOpen={isOpen} onClose={onClose} position={{ top, left }} className="useractions-popover-content">
       <div className="useractions-popover-inner" ref={popoverRef}>
-        <button className="useractions-btn" onClick={onEdit}>Modifier</button>
+        {userRole === 'admin' && (
+          <>
+            <button className="useractions-btn" onClick={onEdit}>Modifier</button>
+            <button className="useractions-btn" onClick={onResetPassword}>Réinitialiser le mot de passe</button>
+          </>
+        )}
         <button className="useractions-btn useractions-btn-danger" onClick={onDelete}>Supprimer</button>
-        <button className="useractions-btn" onClick={onResetPassword}>Réinitialiser le mot de passe</button>
       </div>
     </ActionsPopover>
   );

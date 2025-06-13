@@ -5,6 +5,7 @@ import './BillActionsModal.css';
 export default function BillActionsModal({ isOpen, onClose, onEdit, onDelete, onChangeStatus, bill, position }) {
   const popoverRef = useRef(null);
   const [popoverHeight, setPopoverHeight] = useState(80);
+  const userRole = localStorage.getItem('token') ? JSON.parse(atob(localStorage.getItem('token').split('.')[1])).role : '';
 
   useLayoutEffect(() => {
     if (popoverRef.current) {
@@ -22,7 +23,12 @@ export default function BillActionsModal({ isOpen, onClose, onEdit, onDelete, on
   return (
     <ActionsPopover isOpen={isOpen} onClose={onClose} position={{ top, left }} className="billactions-popover-content">
       <div className="billactions-popover-inner" ref={popoverRef}>
-        <button className="billactions-btn" onClick={onEdit}>Modifier</button>
+        {userRole === 'admin' && (
+          <>
+            <button className="billactions-btn" onClick={onEdit}>Modifier</button>
+            <button className="billactions-btn" onClick={onChangeStatus}>Changer le statut</button>
+          </>
+        )}
         <button
           className="billactions-btn billactions-btn-danger"
           onClick={() => {
@@ -33,7 +39,6 @@ export default function BillActionsModal({ isOpen, onClose, onEdit, onDelete, on
         >
           Supprimer
         </button>
-        <button className="billactions-btn" onClick={onChangeStatus}>Changer le statut</button>
       </div>
     </ActionsPopover>
   );
