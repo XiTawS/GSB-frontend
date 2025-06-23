@@ -1,6 +1,6 @@
 import { apiFetch } from './api';
 
-const API_URL = 'https://gsb-backend-946k.onrender.com/users';
+const API_URL = 'http://localhost:3000/users';
 
 export async function getAllUsers() {
   const response = await apiFetch(API_URL);

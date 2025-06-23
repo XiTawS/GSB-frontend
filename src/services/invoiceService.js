@@ -1,6 +1,6 @@
 import { apiFetch } from './api';
 
-const API_URL = 'https://gsb-backend-946k.onrender.com/invoices';
+const API_URL = 'http://localhost:3000/invoices';
 
 export async function getAllInvoices() {
   const response = await apiFetch(API_URL);
