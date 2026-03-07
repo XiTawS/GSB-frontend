@@ -1,32 +1,23 @@
 import { useEffect, useRef } from 'react';
-import './BillModal.css';
+
+const STATUS_MAP = {
+  Approved: { label: 'Validée', cls: 'bg-emerald-50 text-emerald-700' },
+  Rejected: { label: 'Rejetée', cls: 'bg-red-50 text-red-700' },
+  Pending: { label: 'En attente', cls: 'bg-amber-50 text-amber-700' },
+};
 
 export default function BillModal({ bill, isOpen, onClose }) {
   const modalRef = useRef(null);
-  const closeBtnRef = useRef(null);
 
   useEffect(() => {
-    // Handle escape key press
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-
-    // Handle click outside modal
-    const handleClickOutside = (e) => {
-      if (modalRef.current && !modalRef.current.contains(e.target)) {
-        onClose();
-      }
-    };
+    const handleEscape = (e) => { if (e.key === 'Escape') onClose(); };
+    const handleClickOutside = (e) => { if (modalRef.current && !modalRef.current.contains(e.target)) onClose(); };
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
       document.addEventListener('mousedown', handleClickOutside);
       document.body.style.overflow = 'hidden';
-      setTimeout(() => {
-        if (closeBtnRef.current) closeBtnRef.current.focus();
-      }, 100);
     }
-
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.removeEventListener('mousedown', handleClickOutside);
@@ -34,107 +25,79 @@ export default function BillModal({ bill, isOpen, onClose }) {
     };
   }, [isOpen, onClose]);
 
-  // Don't render anything if modal is closed or no bill data
   if (!isOpen || !bill) return null;
 
-  // Function to determine status badge color
-  const getStatusClasses = (status) => {
-    switch (status) {
-      case 'Approved':
-        return 'bill-modal-status approved';
-      case 'Rejected':
-        return 'bill-modal-status rejected';
-      case 'Pending':
-      default:
-        return 'bill-modal-status pending';
-    }
-  };
+  const status = STATUS_MAP[bill.status] || STATUS_MAP.Pending;
 
   return (
-    <div className="bill-modal-overlay" aria-labelledby="modal-title" role="dialog" aria-modal="true" aria-label="Détail de la facture" tabIndex={-1}>
-      <div className="bill-modal-wrapper">
-        {/* Modal content */}
-        <div 
-          ref={modalRef}
-          className="bill-modal-content"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="bill-modal-header">
-            <h3 className="bill-modal-title">Détail de la facture</h3>
-            <span className={getStatusClasses(bill.status)}>
-              {bill.status}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+      <div ref={modalRef} className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="p-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">Détail de la facture</h3>
+            <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${status.cls}`}>
+              {status.label}
             </span>
           </div>
-          <div style={{ marginBottom: '1.2rem', marginTop: '-0.5rem' }}>
-            <h4 className="bill-modal-title-main" style={{ fontSize: '1.25rem', fontWeight: 700, color: '#23272f', textAlign: 'center', letterSpacing: '-0.5px' }}>{bill.title}</h4>
-          </div>
-          <div className="bill-modal-section">
-            <div className="bill-modal-fields">
-              <div className="bill-modal-row">
-                <div>
-                  <p className="bill-modal-label">ID</p>
-                  <p className="bill-modal-value">#{bill._id}</p>
-                </div>
-                <div>
-                  <p className="bill-modal-label">Date</p>
-                  <p className="bill-modal-value">{new Date(bill.date).toLocaleDateString()}</p>
-                </div>
+
+          {/* Title */}
+          <h4 className="text-xl font-semibold text-gray-900 text-center mb-6">{bill.title}</h4>
+
+          {/* Fields */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-gray-500 mb-1">ID</p>
+                <p className="text-sm text-gray-900 font-mono">#{bill._id?.slice(-8)}</p>
               </div>
               <div>
-                <p className="bill-modal-label">Type</p>
-                <p className="bill-modal-value">{bill.type}</p>
+                <p className="text-xs text-gray-500 mb-1">Date</p>
+                <p className="text-sm text-gray-900">{new Date(bill.date).toLocaleDateString('fr-FR')}</p>
               </div>
-              <div>
-                <p className="bill-modal-label">Montant</p>
-                <p className="bill-modal-value bill-modal-amount">{bill.amount.toFixed(2)} €</p>
-              </div>
-              {bill.description && (
-                <div>
-                  <p className="bill-modal-label">Description</p>
-                  <p className="bill-modal-value">{bill.description}</p>
-                </div>
-              )}
-              {bill.proof && (
-                <div>
-                  <p className="bill-modal-label">Justificatif</p>
-                  <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-                    {(() => {
-                      let isPDF = false;
-                      let src = bill.proof;
-                      if (typeof bill.proof === 'object' && bill.proof.type === 'application/pdf') {
-                        isPDF = true;
-                        src = URL.createObjectURL(bill.proof);
-                      } else if (typeof bill.proof === 'string' && bill.proof.endsWith('.pdf')) {
-                        isPDF = true;
-                      }
-                      if (isPDF) {
-                        return (
-                          <a href={src} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', fontWeight: 500, textDecoration: 'underline', fontSize: '1.1rem', padding: '0.75rem 1.5rem', borderRadius: '0.375rem', background: '#f3f4f6', display: 'inline-block', marginTop: '1rem' }}>
-                            Ouvrir le PDF dans un nouvel onglet
-                          </a>
-                        );
-                      } else {
-                        return <img
-                          src={typeof bill.proof === 'object' ? URL.createObjectURL(bill.proof) : bill.proof}
-                          alt="Justificatif"
-                          style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: '0.5rem', boxShadow: '0 2px 8px 0 rgba(0,0,0,0.07)' }}
-                        />;
-                      }
-                    })()}
-                  </div>
-                </div>
-              )}
             </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Type</p>
+              <p className="text-sm text-gray-900">{bill.type}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Montant</p>
+              <p className="text-2xl font-semibold text-gray-900">{bill.amount.toFixed(2)} €</p>
+            </div>
+            {bill.description && (
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Description</p>
+                <p className="text-sm text-gray-700">{bill.description}</p>
+              </div>
+            )}
+            {bill.proof && (
+              <div>
+                <p className="text-xs text-gray-500 mb-2">Justificatif</p>
+                {typeof bill.proof === 'string' && bill.proof.endsWith('.pdf') ? (
+                  <a
+                    href={bill.proof}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    📄 Ouvrir le PDF
+                  </a>
+                ) : (
+                  <img
+                    src={typeof bill.proof === 'object' ? URL.createObjectURL(bill.proof) : bill.proof}
+                    alt="Justificatif"
+                    className="w-full rounded-xl border border-gray-200"
+                  />
+                )}
+              </div>
+            )}
           </div>
-          <div className="bill-modal-footer">
+
+          {/* Footer */}
+          <div className="mt-6 pt-4 border-t border-gray-100">
             <button
-              type="button"
-              className="bill-modal-close-btn"
-              ref={closeBtnRef}
-              onClick={(e) => {
-                e.stopPropagation();
-                onClose();
-              }}
+              onClick={onClose}
+              className="w-full py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-200 transition-colors"
             >
               Fermer
             </button>
@@ -143,4 +106,4 @@ export default function BillModal({ bill, isOpen, onClose }) {
       </div>
     </div>
   );
-} 
+}

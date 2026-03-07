@@ -1,35 +1,21 @@
-import React from 'react';
-import './ActionsPopover.css';
+/**
+ * ActionsPopover — positioned dropdown menu.
+ * Renders children at the given { top, left } position.
+ * Closes on backdrop click.
+ */
 
-export default function ActionsPopover({ isOpen, onClose, position, children, className = '' }) {
+export default function ActionsPopover({ isOpen, onClose, position, children }) {
   if (!isOpen) return null;
+
   return (
-    <div
-      className="popover-overlay"
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        top: 0, left: 0, width: '100vw', height: '100vh',
-        zIndex: 1000
-      }}
-    >
+    <div className="fixed inset-0 z-50" onClick={onClose}>
       <div
-        className={`popover-content ${className}`}
-        style={{
-          position: 'absolute',
-          top: position?.top ?? 100,
-          left: position?.left ?? 100,
-          minWidth: 180,
-          background: '#fff',
-          borderRadius: 10,
-          boxShadow: '0 4px 24px rgba(0,0,0,0.13)',
-          padding: '1rem',
-          zIndex: 1101
-        }}
+        className="absolute bg-white rounded-xl shadow-lg border border-gray-200 py-1 min-w-[160px]"
+        style={{ top: position?.top ?? 100, left: position?.left ?? 100 }}
         onClick={e => e.stopPropagation()}
       >
         {children}
       </div>
     </div>
   );
-} 
+}

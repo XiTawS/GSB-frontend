@@ -1,39 +1,85 @@
-import React from 'react';
+/**
+ * Pagination — responsive page controls.
+ * Mobile: prev/next buttons with page indicator.
+ * Desktop: page numbers with result count.
+ * Hidden when totalPages <= 1.
+ */
 
 export default function Pagination({ currentPage, totalPages, setCurrentPage, indexOfFirstBill, indexOfLastBill, totalResults }) {
+  if (totalPages <= 1) return null;
+
   return (
-    <div className="pagination-container">
-      <div className="pagination-mobile">
-        <button className="pagination-button" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>Précédent</button>
-        <button className="pagination-button" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Suivant</button>
+    <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3 mt-4">
+
+      {/* ── Mobile ── */}
+      <div className="flex flex-1 justify-between sm:hidden">
+        <button
+          className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+          disabled={currentPage === 1}
+        >
+          Précédent
+        </button>
+        <span className="flex items-center text-sm text-gray-500">
+          {currentPage} / {totalPages}
+        </span>
+        <button
+          className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+          disabled={currentPage === totalPages}
+        >
+          Suivant
+        </button>
       </div>
-      <div className="pagination-desktop">
-        <div>
-          <p className="pagination-info">
-            Page <span className="font-medium">{currentPage}</span> sur <span className="font-medium">{totalPages}</span> — Affichage de <span className="font-medium">{indexOfFirstBill + 1}</span> à <span className="font-medium">{Math.min(indexOfLastBill, totalResults)}</span> sur <span className="font-medium">{totalResults}</span> résultats
-          </p>
-        </div>
-        <div>
-          <nav className="pagination-nav" aria-label="Pagination">
-            <button className="pagination-nav-button" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
-              <span className="sr-only">Précédent</span>
-              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
-              </svg>
+
+      {/* ── Desktop ── */}
+      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+        {/* Result count */}
+        <p className="text-sm text-gray-500">
+          <span className="font-medium">{indexOfFirstBill + 1}</span>
+          {' – '}
+          <span className="font-medium">{Math.min(indexOfLastBill, totalResults)}</span>
+          {' sur '}
+          <span className="font-medium">{totalResults}</span>
+        </p>
+
+        {/* Page numbers */}
+        <nav className="flex gap-1">
+          <button
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+            </svg>
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i + 1}
+              className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
+                currentPage === i + 1
+                  ? 'bg-gray-900 text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+              onClick={() => setCurrentPage(i + 1)}
+            >
+              {i + 1}
             </button>
-            {/* Affichage des numéros de page */}
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button key={i+1} className={`pagination-nav-button${currentPage === i+1 ? ' pagination-nav-button-active' : ''}`} onClick={() => setCurrentPage(i+1)}>{i+1}</button>
-            ))}
-            <button className="pagination-nav-button" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-              <span className="sr-only">Suivant</span>
-              <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </nav>
-        </div>
+          ))}
+
+          <button
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </nav>
       </div>
     </div>
   );
-} 
+}

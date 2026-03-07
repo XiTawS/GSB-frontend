@@ -1,15 +1,11 @@
 import { useState } from 'react';
 import { apiFetch } from '../../services/api';
-import './Login.css';
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // Modale de réinitialisation
   const [showModal, setShowModal] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetMessage, setResetMessage] = useState('');
@@ -18,9 +14,9 @@ export default function Login({ onLogin }) {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-    
+
     try {
-      const response = await apiFetch('http://localhost:3000/auth/login', {
+      const response = await apiFetch('/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -37,8 +33,7 @@ export default function Login({ onLogin }) {
       }
 
       const data = await response.json();
-      localStorage.setItem('token', data.token);
-      onLogin();
+      onLogin(data.token);
     } catch (err) {
       setError('Erreur lors de la connexion. Veuillez réessayer.');
     } finally {
@@ -55,25 +50,21 @@ export default function Login({ onLogin }) {
 
     try {
       setIsLoading(true);
-      const response = await apiFetch('http://localhost:3000/auth/forgot-password', {
+      const response = await apiFetch('/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: resetEmail }),
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         setResetMessage(data.message || 'Un email de réinitialisation a été envoyé');
-        // Affiche le lien dans la console pour le développement
-        console.log('Lien de réinitialisation (pour test) :', 
-          `http://localhost:3000/reset-password/[token]`);
       } else {
         setResetMessage(data.error || "Erreur lors de l'envoi de l'email");
       }
     } catch (error) {
       setResetMessage('Erreur de connexion au serveur');
-      console.error('Erreur:', error);
     } finally {
       setIsLoading(false);
       setTimeout(() => {
@@ -84,58 +75,79 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className="login-bg">
-      <div className="login-container">
-        <div className="login-card">
-          <h2 className="login-title">GSB - Gestion des notes de frais</h2>
-          <p className="login-subtitle">Connectez-vous à votre compte</p>
-          <div className="login-info">
-            ⚠️ Note : La première connexion peut prendre 2-3 minutes car le backend est hébergé sur Render et nécessite un temps de démarrage.
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-sm">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-xl">📝</span>
+            </div>
+            <h1 className="text-xl font-semibold text-gray-900">GSB</h1>
+            <p className="text-sm text-gray-500 mt-1">Gestion des notes de frais</p>
+            <p className="text-xs text-gray-400 mt-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              ⏳ La première connexion peut prendre 1 à 2 minutes (démarrage du serveur).
+            </p>
           </div>
-          {error && <div className="login-error">{error}</div>}
-          <form className="login-form" onSubmit={handleSubmit}>
-            <div className="login-field">
-              <label htmlFor="email" className="login-label">Adresse e-mail</label>
+
+          {/* Error */}
+          {error && (
+            <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 text-center">
+              {error}
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                Adresse e-mail
+              </label>
               <input
                 id="email"
-                name="email"
                 type="email"
                 autoComplete="email"
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="login-input"
                 disabled={isLoading}
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-colors disabled:opacity-50"
+                placeholder="vous@exemple.com"
               />
             </div>
-            <div className="login-field">
-              <label htmlFor="password" className="login-label">Mot de passe</label>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+                Mot de passe
+              </label>
               <input
                 id="password"
-                name="password"
                 type="password"
                 autoComplete="current-password"
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="login-input"
                 disabled={isLoading}
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-colors disabled:opacity-50"
+                placeholder="••••••••"
               />
             </div>
-            <div className="login-options">
+
+            <div className="flex justify-end">
               <button
                 type="button"
-                className="forgot-password-btn"
+                className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
                 onClick={() => setShowModal(true)}
                 disabled={isLoading}
               >
                 Mot de passe oublié ?
               </button>
             </div>
+
             <button
               type="submit"
               disabled={isLoading}
-              className={`login-btn ${isLoading ? 'loading' : ''}`}
+              className="w-full py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Connexion...' : 'Se connecter'}
             </button>
@@ -143,44 +155,44 @@ export default function Login({ onLogin }) {
         </div>
       </div>
 
+      {/* Reset password modal */}
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h3>Réinitialiser le mot de passe</h3>
-            <p>Entrez votre email pour recevoir le lien de réinitialisation</p>
-            
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" onClick={() => { setShowModal(false); setResetMessage(''); }}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">Réinitialiser le mot de passe</h3>
+            <p className="text-sm text-gray-500 mb-4">Entrez votre email pour recevoir le lien de réinitialisation.</p>
+
             <input
               type="email"
               value={resetEmail}
               onChange={(e) => setResetEmail(e.target.value)}
-              placeholder="votre@email.com"
-              className="modal-input"
+              placeholder="vous@exemple.com"
               disabled={isLoading}
+              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-colors mb-4"
             />
-            
-            <div className="modal-buttons">
-              <button 
-                onClick={handlePasswordReset} 
-                className="modal-btn primary"
+
+            <div className="flex gap-3">
+              <button
+                onClick={handlePasswordReset}
                 disabled={isLoading || !resetEmail.includes('@')}
+                className="flex-1 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Envoi en cours...' : 'Envoyer'}
+                {isLoading ? 'Envoi...' : 'Envoyer'}
               </button>
-              <button 
-                onClick={() => {
-                  setShowModal(false);
-                  setResetMessage('');
-                }} 
-                className="modal-btn"
+              <button
+                onClick={() => { setShowModal(false); setResetMessage(''); }}
                 disabled={isLoading}
+                className="flex-1 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-200 transition-colors"
               >
                 Annuler
               </button>
             </div>
-            
+
             {resetMessage && (
-              <div className={`modal-message ${
-                resetMessage.includes('Erreur') ? 'error' : 'success'
+              <div className={`mt-3 px-3 py-2 rounded-lg text-sm text-center ${
+                resetMessage.includes('Erreur')
+                  ? 'bg-red-50 text-red-700'
+                  : 'bg-green-50 text-green-700'
               }`}>
                 {resetMessage}
               </div>

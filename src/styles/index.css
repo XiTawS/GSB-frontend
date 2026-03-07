@@ -1,3 +1,69 @@
 @import "tailwindcss";
 
-/* Custom styles can be added below */ 
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+  .dark body, .dark {
+    @apply bg-gray-950 text-gray-100;
+  }
+}
+
+@layer utilities {
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes modalIn {
+  from { transform: translateY(16px) scale(0.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Dark mode overrides */
+.dark .bg-white { background-color: #1a1a2e; }
+.dark .bg-gray-50 { background-color: #0f0f1a; }
+.dark .bg-gray-100 { background-color: #1a1a2e; }
+.dark .border-gray-200 { border-color: #2a2a3e; }
+.dark .border-gray-100 { border-color: #1f1f32; }
+.dark .text-gray-900 { color: #f1f1f5; }
+.dark .text-gray-700 { color: #c4c4d0; }
+.dark .text-gray-600 { color: #a0a0b8; }
+.dark .text-gray-500 { color: #8888a0; }
+.dark .text-gray-400 { color: #666680; }
+.dark .bg-gray-900 { background-color: #e5e5f0; }
+.dark .bg-gray-900.text-white { background-color: #4040ff; color: #fff; }
+.dark button.bg-gray-900 { background-color: #5050cc; }
+.dark button.bg-gray-900:hover { background-color: #6060dd; }
+.dark .hover\:bg-gray-50:hover { background-color: #1f1f32; }
+.dark .hover\:bg-gray-100:hover { background-color: #2a2a3e; }
+.dark .divide-gray-50 > :not(:first-child) { border-color: #1f1f32; }
+.dark input, .dark select, .dark textarea {
+  background-color: #1a1a2e !important;
+  border-color: #2a2a3e !important;
+  color: #f1f1f5 !important;
+}
+.dark input::placeholder, .dark textarea::placeholder {
+  color: #555570 !important;
+}

@@ -1,41 +1,31 @@
-import React from 'react';
 import Modal from '../../../../components/Modal/Modal';
-import './DeleteConfirmationModal.css';
 
 export default function DeleteConfirmationModal({ isOpen, onClose, onConfirm, userName }) {
   if (!isOpen) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="delete-confirmation-modal">
-      <div className="delete-confirmation-content">
-        <div className="delete-confirmation-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 6h18"></path>
-            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <div className="text-center">
+        <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" />
           </svg>
         </div>
-        <h3 className="delete-confirmation-title">Confirmer la suppression</h3>
-        <p className="delete-confirmation-message">
-          Êtes-vous sûr de vouloir supprimer l'utilisateur <strong>{userName}</strong> ? Cette action est irréversible.
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Confirmer la suppression</h3>
+        <p className="text-sm text-gray-500 mb-6">
+          Êtes-vous sûr de vouloir supprimer <span className="font-medium text-gray-900">{userName}</span> ? Cette action est irréversible.
         </p>
-        <div className="delete-confirmation-actions">
-          <button
-            type="button"
-            className="delete-confirmation-cancel"
-            onClick={onClose}
-          >
+        <div className="flex gap-3">
+          <button onClick={onClose}
+            className="flex-1 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-200 transition-colors">
             Annuler
           </button>
-          <button
-            type="button"
-            className="delete-confirmation-confirm"
-            onClick={onConfirm}
-          >
+          <button onClick={onConfirm}
+            className="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 transition-colors">
             Supprimer
           </button>
         </div>
       </div>
     </Modal>
   );
-} 
+}

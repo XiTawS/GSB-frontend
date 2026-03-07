@@ -1,3 +1,9 @@
+/**
+ * Invoices page — full invoice management.
+ * Features: list, search, filter, sort, paginate, CRUD, export CSV.
+ * Includes skeleton loaders and pull-to-refresh on mobile.
+ */
+
 import { useState, useEffect } from 'react';
 import Sidebar from '../../components/Sidebar/Sidebar';
 import BillModal from './components/BillModal/BillModal';
@@ -5,14 +11,16 @@ import AddBillModal from './components/AddBillModal/AddBillModal';
 import BillActionsModal from './components/BillActionsModal/BillActionsModal';
 import EditBillModal from './components/EditBillModal/EditBillModal';
 import ChangeStatusModal from './components/ChangeStatusModal/ChangeStatusModal';
+import { SkeletonCard, SkeletonTable } from '../../components/Skeleton/Skeleton';
 import { getAllInvoices, updateInvoice, deleteInvoice } from '../../services/invoiceService';
 import { getAllUsers } from '../../services/userService';
-import './Invoices.css';
+import { useToast } from '../../components/Toast/ToastContext';
 import FacturesTable from './FacturesTable';
 import Pagination from '../../components/Pagination/Pagination';
 import InvoicesFilters from './InvoicesFilters';
 
 export default function Invoices({ onLogout }) {
+  // ── State ──
   const [bills, setBills] = useState([]);
   const [selectedBill, setSelectedBill] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -23,376 +31,223 @@ export default function Invoices({ onLogout }) {
   const [filterStatus, setFilterStatus] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [billsPerPage, setBillsPerPage] = useState(5);
+  const [billsPerPage, setBillsPerPage] = useState(6);
   const [actionsModalPosition, setActionsModalPosition] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const token = localStorage.getItem('token');
   const [users, setUsers] = useState([]);
   const [userRole, setUserRole] = useState('');
 
+  const token = localStorage.getItem('token');
+  const toast = useToast();
+
+  // ── Data fetching ──
+
+  useEffect(() => { getAllUsers().then(setUsers).catch(() => {}); }, []);
+
+  const fetchBills = async () => {
+    setLoading(true);
+    try { setBills(await getAllInvoices()); }
+    catch { toast.error('Erreur lors de la récupération des factures.'); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchBills(); }, []);
+
+  // ── Responsive bills per page ──
   useEffect(() => {
-    const fetchUsers = async () => {
-      const data = await getAllUsers();
-      setUsers(data);
+    const update = () => {
+      const w = window.innerWidth;
+      setBillsPerPage(w < 500 ? 3 : w < 1024 ? 5 : 8);
     };
-    fetchUsers();
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
   }, []);
 
-  useEffect(() => {
-    const updateBillsPerPage = () => {
-      const width = window.innerWidth;
-      if (width < 500) setBillsPerPage(2);
-      else if (width < 800) setBillsPerPage(3);
-      else if (width < 1024) setBillsPerPage(5);
-      else if (width < 1400) setBillsPerPage(6);
-      else setBillsPerPage(6);
-    };
-    updateBillsPerPage();
-    window.addEventListener('resize', updateBillsPerPage);
-    return () => window.removeEventListener('resize', updateBillsPerPage);
-  }, []);
+  // Reset to page 1 when filters change
+  useEffect(() => { setCurrentPage(1); }, [bills, filterStatus, searchQuery]);
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const data = await getAllInvoices();
-        setBills(data);
-      } catch (e) {
-        setError('Erreur lors de la récupération des factures.');
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  // Toujours rester sur la première page lors d'un changement de filtre, de recherche ou de modification des factures
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [bills, filterStatus, searchQuery]);
-
+  // Extract user role from token
   useEffect(() => {
     if (!token) return;
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    setUserRole(payload.role);
+    setUserRole(JSON.parse(atob(token.split('.')[1])).role);
   }, [token]);
 
-  const handleAddBill = (newBill) => {
-    setBills([newBill, ...bills]);
-  };
+  // ── Pull to refresh (mobile) ──
+  useEffect(() => {
+    let startY = 0;
+    const onTouchStart = (e) => { startY = e.touches[0].clientY; };
+    const onTouchEnd = (e) => {
+      if (e.changedTouches[0].clientY - startY > 100 && window.scrollY === 0) fetchBills();
+    };
+    window.addEventListener('touchstart', onTouchStart);
+    window.addEventListener('touchend', onTouchEnd);
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, []);
 
-  const handleViewBill = (bill) => {
-    setSelectedBill(bill);
-    setIsDetailModalOpen(true);
-  };
+  // ── Filtering & sorting ──
 
-  // Function to determine status badge color
-  const getStatusClasses = (status) => {
-    switch (status) {
-      case 'Approved':
-        return 'status-badge status-badge-approved';
-      case 'Rejected':
-        return 'status-badge status-badge-rejected';
-      case 'Pending':
-      default:
-        return 'status-badge status-badge-pending';
-    }
-  };
+  const formatDate = (d) => new Date(d).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric' });
 
-  // Format date to more readable format
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
-
-  // Trier les factures du plus récent au plus ancien (version robuste)
-  const sortedBills = [...bills].sort((a, b) => {
-    const dateA = a.date ? new Date(a.date).getTime() : 0;
-    const dateB = b.date ? new Date(b.date).getTime() : 0;
-    return dateB - dateA;
-  });
-  // Log pour vérifier l'ordre des dates
-  console.log('Dates triées :', sortedBills.map(b => b.date));
+  const sortedBills = [...bills].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
   const filteredBills = sortedBills.filter(bill => {
-    // Filter by status
-    if (filterStatus !== 'All' && bill.status !== filterStatus) {
-      return false;
-    }
-    // Filter by search query
+    if (filterStatus !== 'All' && bill.status !== filterStatus) return false;
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+      const q = searchQuery.toLowerCase();
       return (
-        bill.title.toLowerCase().includes(query) ||
-        bill.type.toLowerCase().includes(query) ||
-        bill.description?.toLowerCase().includes(query) ||
-        bill.amount.toString().includes(query)
+        bill.title?.toLowerCase().includes(q) ||
+        bill.type?.toLowerCase().includes(q) ||
+        bill.description?.toLowerCase().includes(q) ||
+        bill.amount?.toString().includes(q)
       );
     }
     return true;
   });
 
-  // Pagination : factures à afficher sur la page courante
+  // ── Pagination ──
+
   const indexOfLastBill = currentPage * billsPerPage;
   const indexOfFirstBill = indexOfLastBill - billsPerPage;
   const currentBills = filteredBills.slice(indexOfFirstBill, indexOfLastBill);
   const totalPages = Math.ceil(filteredBills.length / billsPerPage);
 
-  const handleRowClick = (bill) => {
-    console.log('Opening bill details:', bill);
-    setSelectedBill({ ...bill });
-    setTimeout(() => {
-      setIsDetailModalOpen(true);
-    }, 0);
-  };
+  // ── Computed stats ──
 
-  const openAddBillModal = () => {
-    console.log('Opening add bill modal');
-    setIsAddModalOpen(true);
-  };
+  const totalAmount = bills.reduce((a, b) => a + b.amount, 0);
+  const approvedCount = bills.filter(b => b.status === 'Approved').length;
+  const pendingCount = bills.filter(b => b.status === 'Pending').length;
 
-  const closeDetailModal = () => {
-    console.log('Closing detail modal');
-    setIsDetailModalOpen(false);
-    setTimeout(() => {
-      setSelectedBill(null);
-    }, 300);
-  };
+  // ── Actions ──
 
-  const closeAddModal = () => {
-    console.log('Closing add modal');
-    setIsAddModalOpen(false);
-  };
+  const refreshBills = async () => { setBills(await getAllInvoices()); };
 
   const openActionsModal = (bill, event) => {
     const rect = event.currentTarget.getBoundingClientRect();
     setSelectedBill(bill);
-    setActionsModalPosition({
-      top: rect.top + window.scrollY,
-      left: rect.left + window.scrollX,
-      height: rect.height
-    });
+    setActionsModalPosition({ top: rect.bottom + 4, left: rect.left - 120 });
     setIsActionsModalOpen(true);
   };
 
-  const closeActionsModal = () => {
-    setIsActionsModalOpen(false);
-    setActionsModalPosition(null);
-  };
-
-  const openEditModal = () => {
-    setIsActionsModalOpen(false);
-    setIsEditModalOpen(true);
-  };
-
-  const closeEditModal = () => {
-    setIsEditModalOpen(false);
-  };
-
-  const openStatusModal = () => {
-    setIsActionsModalOpen(false);
-    setIsStatusModalOpen(true);
-  };
-
-  const closeStatusModal = () => {
-    setIsStatusModalOpen(false);
-  };
-
-  const handleChangeStatus = async (updatedStatus) => {
+  const handleDeleteBill = async () => {
     if (!selectedBill) return;
-    setLoading(true);
-    setError('');
-    try {
-      await updateInvoice(selectedBill._id, { status: updatedStatus });
-      const data = await getAllInvoices();
-      setBills(data);
-    } catch (e) {
-      setError('Erreur lors du changement de statut.');
-    } finally {
-      setLoading(false);
-    }
+    try { await deleteInvoice(selectedBill._id); await refreshBills(); toast.success('Facture supprimée.'); }
+    catch { toast.error('Erreur lors de la suppression.'); }
     setIsActionsModalOpen(false);
   };
 
   const handleEditBill = async (updatedBill) => {
     if (!selectedBill) return;
-    setLoading(true);
-    setError('');
-    try {
-      await updateInvoice(selectedBill._id, updatedBill);
-      const data = await getAllInvoices();
-      setBills(data);
-    } catch (e) {
-      setError('Erreur lors de la modification de la facture.');
-    } finally {
-      setLoading(false);
-    }
+    try { await updateInvoice(selectedBill._id, updatedBill); await refreshBills(); toast.success('Facture modifiée.'); }
+    catch { toast.error('Erreur lors de la modification.'); }
     setIsActionsModalOpen(false);
   };
 
-  const handleDeleteBill = async () => {
+  const handleChangeStatus = async (status) => {
     if (!selectedBill) return;
-    setLoading(true);
-    setError('');
-    try {
-      await deleteInvoice(selectedBill._id);
-      const data = await getAllInvoices();
-      setBills(data);
-    } catch (e) {
-      setError('Erreur lors de la suppression de la facture.');
-    } finally {
-      setLoading(false);
-    }
+    try { await updateInvoice(selectedBill._id, { status }); await refreshBills(); toast.success('Statut mis à jour.'); }
+    catch { toast.error('Erreur lors du changement de statut.'); }
     setIsActionsModalOpen(false);
   };
 
-  console.log('Current state:', { 
-    isDetailModalOpen, 
-    isAddModalOpen, 
-    selectedBill: selectedBill ? `Bill #${selectedBill.id}` : 'None' 
-  });
-
-  if (loading) return <div className="loader">Chargement des factures...</div>;
-  if (error) return <div className="error-message">{error}</div>;
+  // ── Render ──
 
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-sidebar">
-        <Sidebar onLogout={onLogout} />
-      </div>
-      <div className="dashboard-content">
-        <main className="dashboard-main">
-            {/* Header Section */}
-            <div className="mb-6 ml-2 sm:ml-4 flex flex-col items-start sm:items-start justify-start sm:justify-start text-left sm:text-left md:text-left text-center sm:text-left">
-              <div className="w-full flex flex-col items-center justify-center sm:items-start sm:justify-start">
-                <h2 className="text-2xl font-bold text-gray-900 leading-tight mb-1 w-full text-center sm:text-left">Factures</h2>
-                <p className="text-gray-500 text-base w-full text-center sm:text-left">Visualisez, créez et gérez vos factures.</p>
-              </div>
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar onLogout={onLogout} />
+
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        <main className="flex-1 px-4 sm:px-8 py-6 max-w-6xl w-full mx-auto animate-fade-in">
+
+          {/* ── Header ── */}
+          <div className="mb-6 pt-10 lg:pt-0">
+            <h1 className="text-2xl font-semibold text-gray-900">Factures</h1>
+            <p className="text-gray-500 text-sm mt-1">Visualisez, créez et gérez vos factures.</p>
+          </div>
+
+          {/* ── Stats cards ── */}
+          {loading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+              <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
             </div>
-            <hr className="dashboard-header-divider" />
-            {/* Stats Section */}
-            <div className="mb-6">
-              <dl className="flex flex-col gap-4 sm:flex-row sm:gap-8 text-center">
-                <div className="flex-1">
-                  <dt className="text-base text-gray-500">Nombre de factures totales</dt>
-                  <dd className="text-4xl font-semibold text-gray-900">{bills.length}</dd>
-                    </div>
-                <div className="flex-1">
-                  <dt className="text-base text-gray-500">Montant total des factures totales</dt>
-                  <dd className="text-4xl font-semibold text-gray-900">{bills.reduce((total, bill) => total + bill.amount, 0).toFixed(2)} €</dd>
-                    </div>
-                <div className="flex-1">
-                  <dt className="text-base text-gray-500">Nombre de factures validées</dt>
-                  <dd className="text-4xl font-semibold text-gray-900">{bills.filter(bill => bill.status === 'Approved').length}</dd>
-                    </div>
-                <div className="flex-1">
-                  <dt className="text-base text-gray-500">Nombre de factures en attente</dt>
-                  <dd className="text-4xl font-semibold text-gray-900">{bills.filter(bill => bill.status === 'Pending').length}</dd>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+              {[
+                { label: 'Total', value: bills.length, color: 'text-gray-900' },
+                { label: 'Montant total', value: `${totalAmount.toFixed(2)} €`, color: 'text-gray-900' },
+                { label: 'Validées', value: approvedCount, color: 'text-emerald-600' },
+                { label: 'En attente', value: pendingCount, color: 'text-amber-600' },
+              ].map((stat, i) => (
+                <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-4 animate-scale-in" style={{ animationDelay: `${i * 50}ms` }}>
+                  <p className="text-xs text-gray-500 mb-1">{stat.label}</p>
+                  <p className={`text-2xl font-semibold ${stat.color}`}>{stat.value}</p>
                 </div>
-              </dl>
+              ))}
             </div>
-            {/* Filters */}
-            <InvoicesFilters
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              filterStatus={filterStatus}
-              setFilterStatus={setFilterStatus}
-              openAddBillModal={openAddBillModal}
-            />
-            
-            {/* Bills Table */}
-            {filteredBills.length === 0 ? (
-              <div className="empty-state">
-                <svg className="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
+          )}
+
+          {/* ── Filters + CSV export ── */}
+          <InvoicesFilters
+            searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+            filterStatus={filterStatus} setFilterStatus={setFilterStatus}
+            openAddBillModal={() => setIsAddModalOpen(true)}
+            filteredBills={filteredBills}
+          />
+
+          {/* ── Table / Empty state ── */}
+          {loading ? (
+            <SkeletonTable rows={5} cols={5} />
+          ) : filteredBills.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center animate-fade-in">
+              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <h3 className="empty-state-title">Aucune facture trouvée</h3>
-                <p className="empty-state-text">
-                  {searchQuery || filterStatus !== 'All'
-                    ? "Essayez d'ajuster votre recherche ou le filtre."
-                    : 'Commencez par créer une nouvelle facture.'}
-                </p>
-                {!searchQuery && filterStatus === 'All' && (
-                  <div className="empty-state-button">
-                    <button
-                      type="button"
-                      onClick={openAddBillModal}
-                      className="add-bill-btn"
-                    >
-                      <svg className="add-bill-icon" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" />
-                      </svg>
-                      Ajouter une facture
-                    </button>
-                  </div>
-                )}
               </div>
-            ) : (
-              <>
-                <FacturesTable
-                  bills={currentBills}
-                  onRowClick={handleRowClick}
-                  openActionsModal={openActionsModal}
-                  getStatusClasses={getStatusClasses}
-                  formatDate={formatDate}
-                  users={users}
-                  userRole={userRole}
-                />
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  setCurrentPage={setCurrentPage}
-                  indexOfFirstBill={indexOfFirstBill}
-                  indexOfLastBill={indexOfLastBill}
-                  totalResults={filteredBills.length}
-                />
-              </>
-            )}
+              <p className="text-sm font-medium text-gray-900 mb-1">Aucune facture trouvée</p>
+              <p className="text-sm text-gray-500">
+                {searchQuery || filterStatus !== 'All' ? "Ajustez votre recherche ou filtre." : 'Créez votre première facture.'}
+              </p>
+            </div>
+          ) : (
+            <>
+              <FacturesTable
+                bills={currentBills}
+                onRowClick={(b) => { setSelectedBill({ ...b }); setIsDetailModalOpen(true); }}
+                openActionsModal={openActionsModal}
+                formatDate={formatDate}
+                users={users}
+                userRole={userRole}
+              />
+              <Pagination
+                currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage}
+                indexOfFirstBill={indexOfFirstBill} indexOfLastBill={indexOfLastBill} totalResults={filteredBills.length}
+              />
+            </>
+          )}
         </main>
-        
-        {/* Bill Detail Modal */}
-        <BillModal
-          bill={selectedBill}
-          isOpen={isDetailModalOpen}
-          onClose={closeDetailModal}
-        />
-        
-        {/* Add Bill Modal */}
-        <AddBillModal
-          isOpen={isAddModalOpen}
-          onClose={closeAddModal}
-          onSave={handleAddBill}
-        />
-        <BillActionsModal
-          isOpen={isActionsModalOpen}
-          onClose={closeActionsModal}
-          onEdit={openEditModal}
+
+        {/* ── Modals ── */}
+        <BillModal bill={selectedBill} isOpen={isDetailModalOpen} onClose={() => { setIsDetailModalOpen(false); setSelectedBill(null); }} />
+
+        <AddBillModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)}
+          onSave={(b) => { setBills([b, ...bills]); toast.success('Facture ajoutée !'); }} />
+
+        <BillActionsModal isOpen={isActionsModalOpen}
+          onClose={() => { setIsActionsModalOpen(false); setActionsModalPosition(null); }}
+          onEdit={() => { setIsActionsModalOpen(false); setIsEditModalOpen(true); }}
           onDelete={handleDeleteBill}
-          onChangeStatus={openStatusModal}
-          bill={selectedBill}
-          position={actionsModalPosition}
-        />
-        <EditBillModal
-          isOpen={isEditModalOpen}
-          onClose={closeEditModal}
-          bill={selectedBill}
-          onSave={handleEditBill}
-        />
-        <ChangeStatusModal
-          isOpen={isStatusModalOpen}
-          onClose={closeStatusModal}
-          status={selectedBill?.status}
-          onSave={handleChangeStatus}
-          billId={selectedBill?._id}
-        />
+          onChangeStatus={() => { setIsActionsModalOpen(false); setIsStatusModalOpen(true); }}
+          bill={selectedBill} position={actionsModalPosition} />
+
+        <EditBillModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} bill={selectedBill} onSave={handleEditBill} />
+
+        <ChangeStatusModal isOpen={isStatusModalOpen} onClose={() => setIsStatusModalOpen(false)}
+          status={selectedBill?.status} onSave={handleChangeStatus} billId={selectedBill?._id} />
       </div>
     </div>
   );
-} 
+}
