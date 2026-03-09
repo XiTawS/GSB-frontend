@@ -1,82 +1,113 @@
-# GSB Frontend
+# 🧾 GSB Frontend - Interface de Gestion des Notes de Frais
 
-Interface web pour la gestion des notes de frais — Galaxy Swiss Bourdin.
+Bienvenue dans la documentation du projet **GSB Frontend**. Cette application web React permet aux employés de soumettre leurs notes de frais et aux administrateurs de les gérer.
 
-## Stack technique
+---
+
+## 📚 Contenu de la Documentation
+La documentation est divisée en sections pour une meilleure lisibilité :
+
+### 🖥️ Interface Utilisateur
+Détaille les pages et la logique d'interaction (Connexion, Dashboard, Factures, Utilisateurs, Réglages).
+[Documentation des Pages](Documentation/Pages.md)
+
+### 🔌 Services API
+Détails techniques sur la communication entre le frontend et le backend.
+[Documentation des Services](Documentation/Services.md)
+
+### 🧩 Composants Réutilisables
+Détails sur les composants UI partagés (Sidebar, Modal, Toast, Charts, etc.).
+[Documentation des Composants](Documentation/Components.md)
+
+### 🔐 Authentification & Routing
+Gestion de l'authentification JWT côté client et protection des routes.
+[Documentation Routing](Documentation/Routing.md)
+
+### 🛠️ Utilitaires
+Fonctions utilitaires (Export CSV, animations, dark mode).
+[Documentation Utilitaires](Documentation/Utils.md)
+
+---
+
+## 🚀 Démarrage Rapide
+
+1. **Cloner le dépôt** :
+   ```bash
+   git clone https://github.com/XiTawS/GSB-frontend.git
+   cd GSB-frontend
+   ```
+
+2. **Installer les dépendances** :
+   ```bash
+   npm install
+   ```
+
+3. **Configurer le backend** :
+   ```bash
+   cp .env.example .env
+   ```
+   > Renseignez `VITE_API_URL` avec l'URL de votre backend.
+
+4. **Lancer en développement** :
+   ```bash
+   npm run dev
+   ```
+
+5. **Build production** :
+   ```bash
+   npm run build
+   ```
+
+---
+
+## 🛠️ Stack Technique
 
 | Technologie | Rôle |
-|-------------|------|
-| **React 19** | UI library |
-| **Vite 6** | Build tool |
-| **Tailwind CSS 4** | Styling (utility-first) |
-| **React Router 7** | Routing SPA |
+| :--- | :--- |
+| **React 19** | Bibliothèque UI (composants, hooks). |
+| **Vite 6** | Build tool & serveur de développement (HMR). |
+| **Tailwind CSS 4** | Styling utility-first. |
+| **React Router 7** | Navigation SPA (Single Page Application). |
 
-## Démarrage rapide
+---
 
-```bash
-# 1. Cloner le repo
-git clone https://github.com/XiTawS/GSB-frontend.git
-cd GSB-frontend
-
-# 2. Installer les dépendances
-npm install
-
-# 3. Configurer l'URL du backend
-cp .env.example .env
-# → Remplir VITE_API_URL
-
-# 4. Lancer en développement
-npm run dev
-
-# 5. Build production
-npm run build
-```
-
-## Variables d'environnement
+## ⚙️ Variable d'Environnement
 
 | Variable | Description | Exemple |
-|----------|-------------|---------|
+| :--- | :--- | :--- |
 | `VITE_API_URL` | URL du backend API | `https://gsb-backend-946k.onrender.com` |
 
-## Architecture
+---
+
+## 🏗️ Architecture
 
 ```
 src/
-├── main.jsx                      # Point d'entrée, providers (Toast, DarkMode)
-├── App.jsx                       # Routing + auth state
+├── main.jsx                      # Montage React + providers globaux
+├── App.jsx                       # Routing + gestion auth
 │
-├── services/                     # Couche API
+├── services/                     # Communication avec le backend
 │   ├── api.js                    # Fetch wrapper (auth, base URL)
 │   ├── invoiceService.js         # CRUD factures
 │   └── userService.js            # CRUD utilisateurs
 │
 ├── components/                   # Composants réutilisables
-│   ├── Sidebar/Sidebar.jsx       # Navigation latérale (responsive)
-│   ├── Modal/Modal.jsx           # Dialog modal générique
-│   ├── Pagination/Pagination.jsx # Contrôles de pagination
-│   ├── ActionsPopover/           # Menu contextuel positionné
-│   ├── Toast/ToastContext.jsx    # Système de notifications
-│   ├── Skeleton/Skeleton.jsx     # Placeholders de chargement
-│   ├── DarkMode/DarkModeContext  # Toggle dark mode
-│   ├── MiniChart/MiniChart.jsx   # Bar chart des dépenses
-│   └── StatusDonut/StatusDonut   # Donut chart par statut
+│   ├── Sidebar/                  # Navigation latérale
+│   ├── Modal/                    # Dialog modal
+│   ├── Pagination/               # Contrôles de pages
+│   ├── ActionsPopover/           # Menu contextuel
+│   ├── Toast/                    # Notifications
+│   ├── Skeleton/                 # Placeholders de chargement
+│   ├── DarkMode/                 # Toggle thème sombre
+│   ├── MiniChart/                # Graphe en barres
+│   └── StatusDonut/              # Graphe en donut
 │
-├── features/                     # Pages / domaines métier
-│   ├── auth/
-│   │   ├── Login.jsx             # Page de connexion
-│   │   └── ResetPassword.jsx     # Réinitialisation mot de passe
-│   ├── dashboard/
-│   │   └── Dashboard.jsx         # Tableau de bord
-│   ├── invoices/
-│   │   ├── Invoices.jsx          # Page factures (list, filter, CRUD)
-│   │   ├── FacturesTable.jsx     # Tableau triable + cards mobile
-│   │   ├── InvoicesFilters.jsx   # Recherche, filtre, export CSV
-│   │   └── components/           # Modals (add, edit, detail, status, actions)
-│   ├── users/
-│   │   ├── UserList.jsx          # Page utilisateurs (admin)
-│   │   └── components/           # Modals (add, edit, delete, reset pwd, actions)
-│   └── setting/
-│       └── Setting.jsx           # Réglages profil + dark mode
+├── features/                     # Pages (logique métier)
+│   ├── auth/                     # Login, reset password
+│   ├── dashboard/                # Tableau de bord
+│   ├── invoices/                 # Factures + modals
+│   ├── users/                    # Utilisateurs + modals
+│   └── setting/                  # Réglages profil
 │
 ├── utils/
 │   └── exportCSV.js              # Export CSV côté client
@@ -85,90 +116,39 @@ src/
     └── index.css                 # Tailwind + animations + dark mode
 ```
 
-## Pages
+---
 
-| Route | Page | Accès |
-|-------|------|-------|
-| `/login` | Connexion | Public |
-| `/reset-password/:token` | Reset mot de passe | Public |
-| `/dashboard` | Tableau de bord | Authentifié |
-| `/invoices` | Gestion des factures | Authentifié |
-| `/users` | Gestion des utilisateurs | Admin |
-| `/setting` | Réglages du profil | Authentifié |
+## 🎯 Fonctionnalités
 
-## Fonctionnalités
+| Fonctionnalité | Description |
+| :--- | :--- |
+| 📊 **Dashboard** | Statistiques, graphe des dépenses, répartition par statut. |
+| 🧾 **Factures** | Liste, recherche, filtre par statut, tri par colonne, pagination. |
+| 📥 **Export CSV** | Téléchargement des factures filtrées au format CSV. |
+| 👥 **Utilisateurs** | Gestion des comptes (admin uniquement). |
+| ⚙️ **Réglages** | Modification du profil, avatar, mot de passe. |
+| 🌙 **Dark mode** | Thème sombre activable dans les réglages. |
+| 📱 **Responsive** | Interface adaptée mobile, tablette et desktop. |
+| 🔔 **Notifications** | Toasts pour toutes les actions (succès / erreur). |
+| ⬇️ **Pull to refresh** | Rafraîchissement par swipe sur mobile. |
 
-### Général
-- **Authentification JWT** — vérification client-side (expiration)
-- **Routing protégé** — redirection auto vers `/login` si non authentifié
-- **Dark mode** — toggle dans Réglages, persiste en localStorage
-- **Toast notifications** — feedback centralisé pour toutes les actions
-- **Skeleton loaders** — placeholders animés pendant le chargement
-- **Animations** — fade-in, scale-in, slide-in sur les pages et modals
-- **Responsive** — mobile-first, sidebar burger, cards mobile
+---
 
-### Dashboard
-- Statistiques (total factures, montant, en attente)
-- Mini graphe des dépenses sur 6 mois
-- Donut chart de répartition par statut
-- Dernières factures (table desktop / cards mobile)
+## 🌐 Déploiement
 
-### Factures
-- Recherche par titre, type, description, montant
-- Filtre par statut (Tous / Validées / Rejetées / En attente)
-- **Tri des colonnes** — clic sur titre, date, montant, statut
-- **Export CSV** — téléchargement des factures filtrées
-- **Pull to refresh** — swipe mobile pour rafraîchir
-- Pagination responsive
-- CRUD complet avec modals (ajouter, modifier, détail, changer statut, supprimer)
-- Upload de justificatifs (image/PDF)
+| Service | Plateforme | URL |
+| :--- | :--- | :--- |
+| **Frontend** | Vercel | `https://gsb-frontend-six.vercel.app` |
+| **Backend** | Render | `https://gsb-backend-946k.onrender.com` |
 
-### Utilisateurs (admin)
-- Liste avec avatar, nom, email, rôle
-- Recherche
-- CRUD complet (ajouter, modifier, supprimer)
-- Réinitialisation de mot de passe avec générateur
+---
 
-### Réglages
-- Modification du profil (nom, email, avatar, mot de passe)
-- Toggle dark mode
-
-## Composants réutilisables
-
-| Composant | Description |
-|-----------|-------------|
-| `Modal` | Dialog centré avec backdrop, fermeture au clic/Escape |
-| `ActionsPopover` | Menu contextuel positionné (trois points) |
-| `Pagination` | Prev/next mobile, numéros desktop |
-| `Skeleton` | Cards, tables, profil en placeholder |
-| `Toast` | Notifications success/error/info (context provider) |
-| `MiniChart` | Bar chart SVG pur (pas de lib externe) |
-| `StatusDonut` | Donut chart SVG pur |
-
-## Design system
-
-- **Couleurs** : gray scale, emerald (succès), amber (attente), red (erreur), violet (admin)
-- **Radius** : `rounded-xl` partout
-- **Spacing** : Tailwind utilities, gap-4, p-4/p-5/p-6
-- **Typography** : system font via Tailwind
-- **Statuts traduits** : Validée, Rejetée, En attente (mapping interne Approved/Rejected/Pending)
-
-## Déploiement
-
-Le frontend est déployé sur **Vercel** :
-- Auto-deploy depuis `main`
-- URL : `https://gsb-frontend-six.vercel.app`
-
-Variable d'environnement Vercel :
-```
-VITE_API_URL=https://gsb-backend-946k.onrender.com
-```
-
-## Comptes de test
+## 👤 Comptes de Test
 
 | Rôle | Email | Mot de passe |
-|------|-------|-------------|
-| Admin | `admin@gsb.fr` | `admin123` |
-| User | `user@gsb.fr` | `user123` |
+| :--- | :--- | :--- |
+| **Administrateur** | `admin@gsb.fr` | `admin123` |
+| **Utilisateur** | `user@gsb.fr` | `user123` |
 
-> ⏳ La première connexion peut prendre 1-2 min (cold start du backend Render).
+> [!WARNING]
+> La première connexion peut prendre 1 à 2 minutes (démarrage à froid du backend Render en plan gratuit).
