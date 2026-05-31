@@ -6,9 +6,6 @@ export default function Login({ onLogin }) {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetMessage, setResetMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,39 +35,6 @@ export default function Login({ onLogin }) {
       setError('Erreur lors de la connexion. Veuillez réessayer.');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handlePasswordReset = async () => {
-    setResetMessage('');
-    if (!resetEmail || !resetEmail.includes('@')) {
-      setResetMessage('Veuillez entrer une adresse email valide');
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      const response = await apiFetch('/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: resetEmail }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setResetMessage(data.message || 'Un email de réinitialisation a été envoyé');
-      } else {
-        setResetMessage(data.error || "Erreur lors de l'envoi de l'email");
-      }
-    } catch (error) {
-      setResetMessage('Erreur de connexion au serveur');
-    } finally {
-      setIsLoading(false);
-      setTimeout(() => {
-        setShowModal(false);
-        setResetMessage('');
-      }, 3000);
     }
   };
 
@@ -133,17 +97,6 @@ export default function Login({ onLogin }) {
               />
             </div>
 
-            <div className="flex justify-end">
-              <button
-                type="button"
-                className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-                onClick={() => setShowModal(true)}
-                disabled={isLoading}
-              >
-                Mot de passe oublié ?
-              </button>
-            </div>
-
             <button
               type="submit"
               disabled={isLoading}
@@ -155,51 +108,6 @@ export default function Login({ onLogin }) {
         </div>
       </div>
 
-      {/* Reset password modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm" onClick={() => { setShowModal(false); setResetMessage(''); }}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm mx-4 p-6" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">Réinitialiser le mot de passe</h3>
-            <p className="text-sm text-gray-500 mb-4">Entrez votre email pour recevoir le lien de réinitialisation.</p>
-
-            <input
-              type="email"
-              value={resetEmail}
-              onChange={(e) => setResetEmail(e.target.value)}
-              placeholder="vous@exemple.com"
-              disabled={isLoading}
-              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-colors mb-4"
-            />
-
-            <div className="flex gap-3">
-              <button
-                onClick={handlePasswordReset}
-                disabled={isLoading || !resetEmail.includes('@')}
-                className="flex-1 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? 'Envoi...' : 'Envoyer'}
-              </button>
-              <button
-                onClick={() => { setShowModal(false); setResetMessage(''); }}
-                disabled={isLoading}
-                className="flex-1 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-200 transition-colors"
-              >
-                Annuler
-              </button>
-            </div>
-
-            {resetMessage && (
-              <div className={`mt-3 px-3 py-2 rounded-lg text-sm text-center ${
-                resetMessage.includes('Erreur')
-                  ? 'bg-red-50 text-red-700'
-                  : 'bg-green-50 text-green-700'
-              }`}>
-                {resetMessage}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

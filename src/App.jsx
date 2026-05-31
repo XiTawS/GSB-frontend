@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 
 // Pages
 import Login from './features/auth/Login';
-import ResetPassword from './features/auth/ResetPassword';
 import Dashboard from './features/dashboard/Dashboard';
 import Invoices from './features/invoices/Invoices';
 import UserList from './features/users/UserList';
@@ -70,7 +69,6 @@ function App() {
       <Routes>
         {/* Public */}
         <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login onLogin={handleLogin} />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Protected */}
         <Route path="/dashboard" element={protect(<Dashboard onLogout={handleLogout} />)} />
