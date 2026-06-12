@@ -10,13 +10,13 @@ import { getUserByEmail } from '../../services/userService';
 
 // ── Helpers ──
 
-function isAdmin() {
+function getRole() {
   try {
     const token = localStorage.getItem('token');
-    if (!token) return false;
-    return JSON.parse(atob(token.split('.')[1])).role === 'admin';
+    if (!token) return null;
+    return JSON.parse(atob(token.split('.')[1])).role;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -57,12 +57,24 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+  {
+    path: '/equipe',
+    label: 'Équipe',
+    managerOnly: true,
+    icon: (
+      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 21a8 8 0 0 0-16 0" />
+        <circle cx="10" cy="8" r="5" />
+        <path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3" />
+      </svg>
+    ),
+  },
 ];
 
 // ── Component ──
 
 const Sidebar = ({ onLogout }) => {
-  const admin = isAdmin();
+  const role = getRole();
   const token = localStorage.getItem('token');
   const [user, setUser] = useState(null);
   const location = useLocation();
@@ -121,7 +133,8 @@ const Sidebar = ({ onLogout }) => {
           {/* Navigation links */}
           <nav className="flex-1 flex flex-col items-center gap-2 py-4">
             {NAV_ITEMS.map((item) => {
-              if (item.adminOnly && !admin) return null;
+              if (item.adminOnly && role !== 'admin') return null;
+              if (item.managerOnly && role !== 'manager') return null;
               const active = isActive(item.path);
               return (
                 <Link

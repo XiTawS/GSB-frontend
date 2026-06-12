@@ -6,6 +6,7 @@ import Login from './features/auth/Login';
 import Dashboard from './features/dashboard/Dashboard';
 import Invoices from './features/invoices/Invoices';
 import UserList from './features/users/UserList';
+import Team from './features/team/Team';
 import Setting from './features/setting/Setting';
 
 /**
@@ -74,6 +75,7 @@ function App() {
         <Route path="/dashboard" element={protect(<Dashboard onLogout={handleLogout} />)} />
         <Route path="/invoices" element={protect(<Invoices onLogout={handleLogout} />)} />
         <Route path="/users" element={protect(<UserList onLogout={handleLogout} />)} />
+        <Route path="/equipe" element={protect(<Team onLogout={handleLogout} />)} />
         <Route path="/setting" element={protect(<Setting onLogout={handleLogout} />)} />
 
         {/* Fallback */}
