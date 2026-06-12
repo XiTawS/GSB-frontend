@@ -28,12 +28,12 @@ export default function MiniChart({ bills }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
       <h3 className="text-sm font-medium text-gray-500 mb-4">Dépenses (6 derniers mois)</h3>
-      <div className="flex items-end gap-2 h-24">
+      <div className="flex gap-2">
         {months.map((m) => {
           const height = Math.max((m.amount / maxAmount) * 100, 4);
           return (
             <div key={m.key} className="flex-1 flex flex-col items-center gap-1 group">
-              <div className="relative w-full flex justify-center">
+              <div className="w-full flex items-end justify-center h-24">
                 <div
                   className="w-full max-w-[32px] bg-gray-900 rounded-md transition-all duration-300 hover:bg-gray-700 cursor-default"
                   style={{ height: `${height}%`, minHeight: '3px' }}
