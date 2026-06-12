@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '../../components/Sidebar/Sidebar';
-import { getUserByEmail, updateUser } from '../../services/userService';
+import { getUserByEmail, updateUserProfile } from '../../services/userService';
 import { useDarkMode } from '../../components/DarkMode/DarkModeContext';
 import { useToast } from '../../components/Toast/ToastContext';
 import { SkeletonProfile } from '../../components/Skeleton/Skeleton';
@@ -10,6 +10,7 @@ export default function Setting({ onLogout }) {
   const [isLoading, setIsLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '', avatar: '' });
+  const [avatarFile, setAvatarFile] = useState(null);
   const token = localStorage.getItem('token');
   const { isDark, toggle: toggleDarkMode } = useDarkMode();
   const toast = useToast();
@@ -19,22 +20,24 @@ export default function Setting({ onLogout }) {
   const handleAvatarChange = e => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setForm(f => ({ ...f, avatar: reader.result }));
-      reader.readAsDataURL(file);
+      setAvatarFile(file);
+      setForm(f => ({ ...f, avatar: URL.createObjectURL(file) })); // aperçu local
     }
   };
 
   const handleCancel = () => {
     setEditMode(false);
+    setAvatarFile(null);
     if (user) setForm({ firstName: user.firstName || '', lastName: user.lastName || '', email: user.email || '', password: '', avatar: user.avatar || '' });
   };
 
   const handleSave = async e => {
     e.preventDefault();
     try {
-      const updated = await updateUser(user.email, { firstName: form.firstName, lastName: form.lastName, email: form.email, password: form.password, avatar: form.avatar });
+      const fields = { firstName: form.firstName, lastName: form.lastName, email: form.email, password: form.password };
+      const updated = await updateUserProfile(user.email, fields, avatarFile);
       setUser(updated);
+      setAvatarFile(null);
       setEditMode(false);
       toast.success('Profil mis à jour !');
     } catch { toast.error("Erreur lors de la mise à jour du profil."); }
